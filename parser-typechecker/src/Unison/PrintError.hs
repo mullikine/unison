@@ -54,7 +54,7 @@ import qualified Unison.Util.Pretty as Pr
 import Unison.Util.Pretty (Pretty, ColorText)
 import qualified Unison.Names3 as Names
 import qualified Unison.Name as Name
-import Unison.HashQualified (HashQualified)
+import Unison.HashQualified (HashQualified')
 import Unison.Type (Type)
 import Unison.NamePrinter (prettyHashQualified0)
 
@@ -931,6 +931,7 @@ prettyParseError s = \case
     , ").\n"
     ]
   go' (P.ErrorCustom e) = go e
+  errorVar :: v -> Pretty ColorText
   errorVar v = style ErrorSite . fromString . Text.unpack $ Var.name v
   go :: Parser.Error v -> Pretty ColorText
   -- | UseInvalidPrefixSuffix (Either (L.Token Name) (L.Token Name)) (Maybe [L.Token Name])
@@ -1098,13 +1099,13 @@ prettyParseError s = \case
   go (Parser.ResolutionFailures        failures) =
     Pr.border 2 . prettyResolutionFailures s $ failures
   unknownConstructor
-    :: String -> L.Token HashQualified -> Pretty ColorText
+    :: String -> L.Token (HashQualified' v) -> Pretty ColorText
   unknownConstructor ctorType tok = Pr.lines [
     (Pr.wrap . mconcat) [ "I don't know about any "
     , fromString ctorType
     , " constructor named "
     , Pr.group (
-        stylePretty ErrorSite (prettyHashQualified0 (L.payload tok)) <>
+        stylePretty ErrorSite (prettyHashQualified0 (Name.fromVar <$> L.payload tok)) <>
         "."
       )
     , "Maybe make sure it's correctly spelled and that you've imported it:"
