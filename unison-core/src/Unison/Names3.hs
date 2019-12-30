@@ -37,14 +37,14 @@ data ResolutionFailure v a
 
 type ResolutionResult v a r = Either (Seq (ResolutionFailure v a)) r
 
--- For all names in `ns`, (ex: foo.bar.baz), generate the list of suffixes 
+-- For all names in `ns`, (ex: foo.bar.baz), generate the list of suffixes
 -- of that name [[foo.bar.baz], [bar.baz], [baz]]. Insert these suffixes
 -- into a multimap map along with their corresponding refs. Any suffix
 -- which is unique is added as an entry to `ns`.
 suffixify0 :: Names0 -> Names0
-suffixify0 ns = ns <> suffixNs 
+suffixify0 ns = ns <> suffixNs
   where
-  suffixNs = names0 (R.fromList uniqueTerms) (R.fromList uniqueTypes) 
+  suffixNs = names0 (R.fromList uniqueTerms) (R.fromList uniqueTypes)
   terms = List.multimap [ (n,ref) | (n0,ref) <- R.toList (terms0 ns), n <- Name.suffixes n0 ]
   types = List.multimap [ (n,ref) | (n0,ref) <- R.toList (types0 ns), n <- Name.suffixes n0 ]
   uniqueTerms = [ (n,ref) | (n, nubOrd -> [ref]) <- Map.toList terms ]
@@ -212,13 +212,13 @@ importing :: [(Name, Name)] -> Names -> Names
 importing shortToLongName ns =
   ns { currentNames = importing0 shortToLongName (currentNames ns) }
 
-importing0 :: [(Name, Name)] -> Names0 -> Names0
+importing0 :: Ord n => [(n, n)] -> Names.Names' n -> Names.Names' n
 importing0 shortToLongName ns =
   Names.Names
-    (foldl' go (terms0 ns) shortToLongName)
-    (foldl' go (types0 ns) shortToLongName)
+    (foldl' go (Names.terms ns) shortToLongName)
+    (foldl' go (Names.types ns) shortToLongName)
   where
-  go :: (Show a, Ord a, Ord b) => Relation a b -> (a, a) -> Relation a b
+  go :: (Ord a, Ord b) => Relation a b -> (a, a) -> Relation a b
   go m (shortname, qname) = case R.lookupDom qname m of
     s | Set.null s -> m
       | otherwise -> R.insertManyRan shortname s (R.deleteDom shortname m)
